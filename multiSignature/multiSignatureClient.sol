@@ -9,7 +9,6 @@ interface IMultiSignature{
 }
 contract multiSignatureClient{
     uint256 private constant multiSignaturePositon = uint256(keccak256("org.Phoenix.multiSignature.storage"));
-    event DebugEvent(address indexed from,bytes32 msgHash,uint256 value,uint256 value1);
     constructor(address multiSignature) public {
         require(multiSignature != address(0),"multiSignatureClient : Multiple signature contract address is zero!");
         saveValue(multiSignaturePositon,uint256(multiSignature));
