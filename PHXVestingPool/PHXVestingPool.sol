@@ -43,7 +43,11 @@ contract PHXVestingPool is PHXVestingPoolData{
          return userInfoMap[account].tokenBalance[token];
     }
     function getAcceleratedBalance(address account,address minePool)external view returns(uint256,uint64){
-        return (userInfoMap[account].acceleratedBalance[minePool],userInfoMap[account].maxPeriodID);
+        uint256 oldBalance = userInfoMap[account].acceleratedBalance[minePool];
+        if (oldBalance > userInfoMap[account].vestingTokenBalance){
+            oldBalance = userInfoMap[account].vestingTokenBalance;
+        }
+        return (oldBalance,userInfoMap[account].maxPeriodID);
     }
     function getAcceleratorPeriodInfo()external view returns (uint256,uint256){
         return (startTime,period);
@@ -58,9 +62,23 @@ contract PHXVestingPool is PHXVestingPoolData{
     function stake(address token,uint256 amount,uint64 maxLockedPeriod,address toMinePool) nonReentrant notHalted public {
         _stake(msg.sender,token,amount,maxLockedPeriod,toMinePool);
     }
+    function checkPoolBalance(address account)internal{
+        uint256 poolLen = minePoolList.length;
+        uint256 totalBalance = userInfoMap[account].vestingTokenBalance;
+        for(uint256 i=0;i<poolLen;i++){
+            uint256 balance = userInfoMap[account].acceleratedBalance[minePoolList[i]];
+            if (balance >totalBalance){
+                userInfoMap[account].acceleratedBalance[minePoolList[i]] = totalBalance;
+                totalBalance = 0;
+            }else{
+                totalBalance -= balance;
+            }
+        }
+    }
     function _stake(address account,address token,uint256 amount,uint64 maxLockedPeriod,address toMinePool)
          tokenPermission(token) validPeriod(maxLockedPeriod) internal {
         amount = getPayableAmount(token,amount);
+        checkPoolBalance();
         require(amount>0, "Stake amount is zero!");
         uint64 oldPeriod = userInfoMap[account].maxPeriodID;
         uint256 balance = amount.mul(vestingTokenRate[token])/1000;
@@ -155,8 +173,8 @@ contract PHXVestingPool is PHXVestingPoolData{
         }
     }
     function _removeFromMinoPool(address account,address minePool,uint256 amount) internal{
-        require(userInfoMap[account].acceleratedBalance[minePool]>=amount,"mine pool accelerated balance is unsufficient");
         uint256 oldBalance = userInfoMap[account].acceleratedBalance[minePool];
+        require(oldBalance>=amount,"mine pool accelerated balance is unsufficient");
         userInfoMap[account].acceleratedBalance[minePool] = oldBalance-amount;
         changeAcceleratedInfo(account,minePool,oldBalance,userInfoMap[account].maxPeriodID);
         emit WithdrawMinePool(account,minePool,amount,userInfoMap[account].maxPeriodID);
