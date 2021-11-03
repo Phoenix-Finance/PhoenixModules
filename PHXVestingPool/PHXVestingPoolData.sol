@@ -30,7 +30,7 @@ contract PHXVestingPoolData is Halt,timeLimitation,ReentrancyGuard,versionUpdate
         mapping(address=>uint256) acceleratedBalance;
     }
     mapping(address=>userAcceleratorInfo) public userInfoMap;
-    address[] minePoolList;
+    address[] public minePoolList;
     uint256 public maxPeriodLimit;
     uint256 public period;
     uint256 public startTime;

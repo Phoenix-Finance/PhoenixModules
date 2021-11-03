@@ -21,6 +21,7 @@ contract PHXVestingPool is PHXVestingPoolData{
         startTime = _startTime;
         period = _periodTime;
         maxPeriodLimit = _maxPeriodLimit;
+        minePoolList.push(address(0));
     }
     function update() external versionUpdate {
     }
@@ -33,7 +34,7 @@ contract PHXVestingPool is PHXVestingPoolData{
         vestTokens.removeWhiteListAddress(token);
         vestingTokenRate[token] = 0;
     }
-    function addMinePool(address minePool)external public OwnerOrOrigin {
+    function addMinePool(address minePool)external OwnerOrOrigin {
         minePoolList.addWhiteListAddress(minePool);
     }
     function getVestingBalance(address account)external view returns(uint256,uint64){
@@ -78,7 +79,7 @@ contract PHXVestingPool is PHXVestingPoolData{
     function _stake(address account,address token,uint256 amount,uint64 maxLockedPeriod,address toMinePool)
          tokenPermission(token) validPeriod(maxLockedPeriod) internal {
         amount = getPayableAmount(token,amount);
-        checkPoolBalance();
+        checkPoolBalance(account);
         require(amount>0, "Stake amount is zero!");
         uint64 oldPeriod = userInfoMap[account].maxPeriodID;
         uint256 balance = amount.mul(vestingTokenRate[token])/1000;
