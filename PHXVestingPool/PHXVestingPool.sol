@@ -33,6 +33,9 @@ contract PHXVestingPool is PHXVestingPoolData{
         vestTokens.removeWhiteListAddress(token);
         vestingTokenRate[token] = 0;
     }
+    function addMinePool(address minePool)external public onlyOwner {
+        minePoolList.addWhiteListAddress(minePool);
+    }
     function getVestingBalance(address account)external view returns(uint256,uint64){
          return (userInfoMap[account].vestingTokenBalance,userInfoMap[account].maxPeriodID);
     }
